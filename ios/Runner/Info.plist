@@ -24,6 +24,8 @@
 		<string>Can I use the camera please?</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Can I use the mic please?</string>
+		<key>NSLocationWhenInUsageDescription</key>
+		<string>Gonna save your location</string>
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>

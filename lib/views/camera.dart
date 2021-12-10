@@ -53,22 +53,27 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         ),
         leading: Container(),
       ),
-      body: FutureBuilder<void>(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
+      body: Container(
+        height: MediaQuery.of(context).size.height,
+        child: FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return CameraPreview(_controller);
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
             await _initializeControllerFuture;
             final image = await _controller.takePicture();
             imagePath = image.path;
+            // Navigator.pop(context);
             await Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const Register()),
             );

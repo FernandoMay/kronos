@@ -58,3 +58,10 @@ const kronosH1Black = TextStyle(
   fontWeight: FontWeight.w400,
   color: textColor,
 );
+
+const kronosH2White = TextStyle(
+  fontFamily: "Roboto",
+  fontSize: 16.0,
+  fontWeight: FontWeight.w400,
+  color: Colors.white,
+);

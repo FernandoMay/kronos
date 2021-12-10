@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kronos/constants.dart';
 import 'package:kronos/models/user.dart';
 import 'package:kronos/repository/db.dart';
+import 'package:kronos/views/camera.dart';
 import 'package:kronos/views/register.dart';
 import 'package:kronos/views/userCard.dart';
 
@@ -68,47 +69,55 @@ class _usersListPageState extends State<usersListPage> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<User>? data = snapshot.data;
-              return ListView.builder(
-                  itemCount: data!.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Dismissible(
-                      background: Container(
-                        color: successColor,
-                        alignment: Alignment.centerLeft,
-                        padding: EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Icon(Icons.edit, color: Colors.white, size: 42),
-                      ),
-                      secondaryBackground: Container(
-                        color: dangerColor,
-                        alignment: Alignment.centerRight,
-                        padding: EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Icon(Icons.delete_forever,
-                            color: Colors.white, size: 42),
-                      ),
-                      child: userCard(
-                        user: data[index],
-                      ),
-                      key: ValueKey<int>(snapshot.data![index].id!),
-                      onDismissed: (DismissDirection direction) async {
-                        if (direction == DismissDirection.endToStart) {
-                          await handler.deleteUser(snapshot.data![index].id!);
-                          setState(() {
-                            snapshot.data!.remove(snapshot.data![index]);
-                          });
-                        } else if (direction == DismissDirection.startToEnd) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Register(),
-                            ),
-                          );
-                          setState(() {
-                            snapshot.data!.remove(snapshot.data![index]);
-                          });
-                        }
-                      },
-                    );
-                  });
+              if (data?.length == 0) {
+                return Center(
+                  child: Text("Adelante, regístra un usuario ;)",
+                      style: kronosH4Black),
+                );
+              } else {
+                return ListView.builder(
+                    itemCount: data!.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return Dismissible(
+                        background: Container(
+                          color: successColor,
+                          alignment: Alignment.centerLeft,
+                          padding: EdgeInsets.symmetric(horizontal: 20.0),
+                          child:
+                              Icon(Icons.edit, color: Colors.white, size: 42),
+                        ),
+                        secondaryBackground: Container(
+                          color: dangerColor,
+                          alignment: Alignment.centerRight,
+                          padding: EdgeInsets.symmetric(horizontal: 20.0),
+                          child: Icon(Icons.delete_forever,
+                              color: Colors.white, size: 42),
+                        ),
+                        child: userCard(
+                          user: data[index],
+                        ),
+                        key: ValueKey<int>(snapshot.data![index].id!),
+                        onDismissed: (DismissDirection direction) async {
+                          if (direction == DismissDirection.endToStart) {
+                            await handler.deleteUser(snapshot.data![index].id!);
+                            setState(() {
+                              snapshot.data!.remove(snapshot.data![index]);
+                            });
+                          } else if (direction == DismissDirection.startToEnd) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const Register(),
+                              ),
+                            );
+                            setState(() {
+                              snapshot.data!.remove(snapshot.data![index]);
+                            });
+                          }
+                        },
+                      );
+                    });
+              }
             } else if (snapshot.hasError) {
               return Text("${snapshot.error}");
             }

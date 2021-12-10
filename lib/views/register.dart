@@ -9,6 +9,7 @@ import 'package:kronos/models/user.dart';
 import 'package:kronos/repository/db.dart';
 import 'package:kronos/views/camera.dart';
 import 'package:kronos/views/userListPage.dart';
+import 'package:location/location.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -37,7 +38,34 @@ class _RegisterState extends State<Register> {
   }
 
   late DatabaseHandler handler;
+
   // late Future<List<User>> futureData;
+
+  Location location = Location();
+
+  late bool _serviceEnabled;
+  late PermissionStatus _permissionGranted;
+  late LocationData _locationData;
+
+  Future<void> getLocation() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+  }
 
   @override
   void initState() {
@@ -45,6 +73,18 @@ class _RegisterState extends State<Register> {
 
     ///futureData = fetchUsers();
     handler = DatabaseHandler();
+    getLocation();
+  }
+
+  @override
+  @override
+  void dispose() {
+    _nameField.dispose();
+    _lastnameField.dispose();
+    _phoneField.dispose();
+    _emailField.dispose();
+    imagePath.dispose();
+    super.dispose();
   }
 
   Future<int> addUser() async {
@@ -53,8 +93,8 @@ class _RegisterState extends State<Register> {
         phone: int.parse(_phoneField.text),
         lastname: _lastnameField.text,
         email: _emailField.text,
-        lat: 6.3485834,
-        lon: 7.9485734,
+        lat: _locationData.latitude!,
+        lon: _locationData.longitude!,
         image: imagePath);
     return await handler.insertUser([user]);
   }
@@ -93,6 +133,60 @@ class _RegisterState extends State<Register> {
                     style: kronosH3Blue,
                     textAlign: TextAlign.center,
                   ),
+                ),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.symmetric(horizontal: 26.0),
+                  child: Text(
+                    "Fotografía",
+                    style: kronosH1Black,
+                  ),
+                ),
+                SizedBox(
+                  height: 8.0,
+                ),
+                CupertinoButton(
+                  child: Container(
+                    // height: 48.0,
+                    width: double.infinity,
+                    height: 142.0,
+                    decoration: BoxDecoration(
+                      color: bgLightColor,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding:
+                        EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Icon(Icons.photo_camera, size: 48, color: Colors.white),
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Tomar fotografía", style: kronosH2White),
+                        )
+                      ],
+                    ),
+                  ),
+                  onPressed: () {
+                    // print("FOTO");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TakePictureScreen(camera: cameras.first),
+                      ),
+                    );
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: imagePath != null
+                      ? Image.file(File(imagePath), fit: BoxFit.cover)
+                      : Container(),
+                ),
+                SizedBox(
+                  height: 8.0,
                 ),
                 Container(
                   alignment: Alignment.centerLeft,
@@ -210,48 +304,6 @@ class _RegisterState extends State<Register> {
                 SizedBox(
                   height: 18.0,
                 ),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.symmetric(horizontal: 26.0),
-                  child: Text(
-                    "Fotografía",
-                    style: kronosH1Black,
-                  ),
-                ),
-                SizedBox(
-                  height: 8.0,
-                ),
-                CupertinoButton(
-                  child: Container(
-                    // height: 48.0,
-                    width: double.infinity,
-                    height: 142.0,
-                    decoration: BoxDecoration(
-                      color: bgLightColor,
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    padding:
-                        EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
-                    child:
-                        Icon(Icons.photo_camera, size: 48, color: Colors.white),
-                  ),
-                  onPressed: () {
-                    // print("FOTO");
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TakePictureScreen(camera: cameras.first),
-                      ),
-                    );
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: imagePath != null
-                      ? Image.file(File(imagePath), fit: BoxFit.cover)
-                      : Container(),
-                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 24.0, vertical: 12.0),
@@ -262,12 +314,9 @@ class _RegisterState extends State<Register> {
                       // padding: EdgeInsets.symmetric(horizontal: size.width * 0.25),
                       child: Text("Guardar datos"),
                       onPressed: () {
-                        if (_nameField.text.isEmpty ||
-                            _lastnameField.text.isEmpty ||
-                            _phoneField.text.isEmpty ||
-                            _emailField.text.isEmpty) {
+                        if (imagePath == null) {
                           Fluttertoast.showToast(
-                              msg: "Llena todos los campos",
+                              msg: "Debes tomar una fotografía",
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.CENTER,
                               timeInSecForIosWeb: 1,
@@ -275,9 +324,12 @@ class _RegisterState extends State<Register> {
                               textColor: textColor,
                               fontSize: 16.0);
                         } else {
-                          if (!emailValidator(_emailField.text)) {
+                          if (_nameField.text.isEmpty ||
+                              _lastnameField.text.isEmpty ||
+                              _phoneField.text.isEmpty ||
+                              _emailField.text.isEmpty) {
                             Fluttertoast.showToast(
-                                msg: "Ingresa un email válido",
+                                msg: "Llena todos los campos",
                                 toastLength: Toast.LENGTH_SHORT,
                                 gravity: ToastGravity.CENTER,
                                 timeInSecForIosWeb: 1,
@@ -285,16 +337,27 @@ class _RegisterState extends State<Register> {
                                 textColor: textColor,
                                 fontSize: 16.0);
                           } else {
-                            handler.initializeDB().whenComplete(() async {
-                              await addUser();
-                              setState(() {});
-                            });
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const usersListPage(),
-                              ),
-                            );
+                            if (!emailValidator(_emailField.text)) {
+                              Fluttertoast.showToast(
+                                  msg: "Ingresa un email válido",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.CENTER,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: greyLightColor,
+                                  textColor: textColor,
+                                  fontSize: 16.0);
+                            } else {
+                              handler.initializeDB().whenComplete(() async {
+                                await addUser();
+                                setState(() {});
+                              });
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const usersListPage(),
+                                ),
+                              );
+                            }
                           }
                         }
                       },
