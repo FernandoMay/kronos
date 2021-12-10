@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:kronos/constants.dart';
+import 'package:kronos/main.dart';
 import 'package:kronos/models/user.dart';
 import 'package:kronos/repository/db.dart';
+import 'package:kronos/views/camera.dart';
 import 'package:kronos/views/userListPage.dart';
 
 class Register extends StatefulWidget {
@@ -51,7 +55,7 @@ class _RegisterState extends State<Register> {
         email: _emailField.text,
         lat: 6.3485834,
         lon: 7.9485734,
-        image: 'https://picsum.photos/100/300');
+        image: imagePath);
     return await handler.insertUser([user]);
   }
 
@@ -232,14 +236,21 @@ class _RegisterState extends State<Register> {
                         Icon(Icons.photo_camera, size: 48, color: Colors.white),
                   ),
                   onPressed: () {
-                    print("FOTO");
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const Register(),
-                    //   ),
-                    // );
+                    // print("FOTO");
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            TakePictureScreen(camera: cameras.first),
+                      ),
+                    );
                   },
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: imagePath != null
+                      ? Image.file(File(imagePath), fit: BoxFit.cover)
+                      : Container(),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(

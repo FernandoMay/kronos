@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:kronos/constants.dart';
+import 'package:camera/camera.dart';
+import 'package:kronos/views/userListPage.dart';
+
+List<CameraDescription> cameras = [];
 
 ThemeData theme() {
   return ThemeData(
@@ -12,9 +16,14 @@ ThemeData theme() {
   );
 }
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+Future<void> main() async {
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    print('Error in fetching the cameras: $e');
+  }
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

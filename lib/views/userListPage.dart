@@ -23,7 +23,7 @@ class _usersListPageState extends State<usersListPage> {
     ///futureData = fetchUsers();
     handler = DatabaseHandler();
     handler.initializeDB().whenComplete(() async {
-      await addUsers();
+      //await addUsers();
       setState(() {});
     });
   }
@@ -61,6 +61,7 @@ class _usersListPageState extends State<usersListPage> {
         ),
         leading: Container(),
       ),
+      backgroundColor: greyLightColor,
       body: Center(
         child: FutureBuilder<List<User>>(
           future: handler.retrieveUsers(),

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:kronos/constants.dart';
 import 'package:kronos/models/user.dart';
+import 'package:kronos/views/camera.dart';
 
 class userCard extends StatefulWidget {
   final User? user;
@@ -31,10 +34,12 @@ class _userCardState extends State<userCard> {
             child: SizedBox(
               width: size.width * 0.4,
               height: size.height * 0.24,
-              child: Image.network(
-                widget.user!.image,
-                fit: BoxFit.cover,
-              ),
+              child: imagePath != null
+                  ? Image.file(File(widget.user!.image), fit: BoxFit.cover)
+                  : Image.network(
+                      widget.user!.image,
+                      fit: BoxFit.cover,
+                    ),
             ),
           ),
           Container(
